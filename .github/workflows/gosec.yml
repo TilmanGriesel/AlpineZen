@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2025 Tilman Griesel
+#
+# SPDX-License-Identifier: GPL-3.0-or-later AND LicenseRef-AlpineZen-Trademark
+
+name: Gosec
+
+on:
+  workflow_call:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: ./...

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- App Sandbox (Not yet possible due to CLI call) -->
+    <key>com.apple.security.app-sandbox</key>
+    <false/>
+
+    <!-- Allow network access -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+
+    <!-- Allow file access to the user's home directory -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+
+    <!-- Allow app to use application groups -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.club.alpinezen.wallpaper</string>
+    </array>
+
+    <!-- Allow the app to set wallpaper -->
+    <key>com.apple.security.system.preferences</key>
+    <true/>
+</dict>
+</plist>
