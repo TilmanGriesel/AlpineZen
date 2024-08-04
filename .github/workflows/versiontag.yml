@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2024 Tilman Griesel
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Tag Release Version
+
+on:
+  push:
+    branches:
+      - "release-testing"
+    tags:
+      - "v*.*.*"
+
+jobs:
+  gosec:
+    uses: ./.github/workflows/gosec.yml
+
+  vulncheck:
+    uses: ./.github/workflows/vulncheck.yml
+
+  test:
+    needs: [gosec, vulncheck]
+    uses: ./.github/workflows/test.yml
+
+  build:
+    needs: [test]
+    uses: ./.github/workflows/build.yml
+
+  macos-package:
+    needs: [build]
+    uses: ./.github/workflows/macos-package.yml
+    with:
+      apple_primary_bundle_id: ${{ vars.APPLE_PRIMARY_BUNDLE_ID }}
+      apple_team_id: ${{ vars.APPLE_TEAM_ID }}
+    secrets:
+      apple_codesign_cert: ${{ secrets.APPLE_CODESIGN_CERT }}
+      apple_codesign_password: ${{ secrets.APPLE_CODESIGN_PASSWORD }}
+      apple_notary_user: ${{ secrets.APPLE_DEVELOPER_ID }}
+      apple_notary_password: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+
+  release:
+    needs: [build, macos-package]
+    uses: ./.github/workflows/release.yml
+    secrets:
+      token: ${{ secrets.PAT }}

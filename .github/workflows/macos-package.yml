@@ -1,0 +1,178 @@
+# SPDX-FileCopyrightText: 2024 Tilman Griesel
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Signing and Packaging Job
+
+on:
+  workflow_call:
+    inputs:
+      apple_team_id:
+        required: true
+        type: string
+      apple_primary_bundle_id:
+        required: true
+        type: string
+    secrets:
+      apple_codesign_cert:
+        required: true
+      apple_codesign_password:
+        required: true
+      apple_notary_user:
+        required: true
+      apple_notary_password:
+        required: true
+
+jobs:
+  package:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: [darwin]
+        arch: [arm64, amd64]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set default version
+        run: echo "VERSION=dev" >> $GITHUB_ENV
+
+      - name: Get version from tag
+        if: startsWith(github.ref, 'refs/tags/')
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Define variables
+        run: |
+          echo "APP_NAME=AlpineZen Wallpaper.app" >> $GITHUB_ENV
+          echo "APP_PREFIX=alpinezen-wallpaper" >> $GITHUB_ENV
+          echo "OS_ARCH=${{ matrix.os }}-${{ matrix.arch }}" >> $GITHUB_ENV
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.APP_PREFIX }}-${{ env.OS_ARCH }}.tar.gz
+          path: .
+
+      - name: Extract artifact
+        run: tar -xzvf ${{ env.APP_PREFIX }}-${{ env.OS_ARCH }}.tar.gz
+
+      - name: Debug Information
+        run: |
+          echo "Primary Bundle ID: ${{ inputs.apple_primary_bundle_id }}"
+          echo "Apple Team ID: ${{ inputs.apple_team_id }}"
+
+      - name: Decode and import certificate
+        run: |
+          echo "${{ secrets.apple_codesign_cert }}" | base64 --decode > certificate.p12
+          security create-keychain -p "" build.keychain
+          security import certificate.p12 -k build.keychain -P "${{ secrets.apple_codesign_password }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+          security unlock-keychain -p "" build.keychain
+          security list-keychains -d user -s build.keychain
+
+      - name: Create app bundle
+        run: |
+          echo "Create directory structure"
+          mkdir -p "${{ env.APP_NAME }}/Contents/MacOS"
+          mkdir -p "${{ env.APP_NAME }}/Contents/Resources"
+
+          echo "Directory structure created:"
+          ls -R "${{ env.APP_NAME }}/Contents/"
+
+          echo "Copy Info.plist"
+          cp assets/macos/ui_info.plist "${{ env.APP_NAME }}/Contents/Info.plist"
+
+          echo "Copy UI binary"
+          if [ -f "${{ env.APP_PREFIX }}-ui-${{ env.OS_ARCH }}" ]; then
+            cp "${{ env.APP_PREFIX }}-ui-${{ env.OS_ARCH }}" "${{ env.APP_NAME }}/Contents/MacOS/AlpineZenUI"
+          else
+            echo "Error: UI binary file not found!"
+            exit 1
+          fi
+
+          echo "Copy CLI helper binary"
+          if [ -f "${{ env.APP_PREFIX }}-cli-${{ env.OS_ARCH }}" ]; then
+            cp "${{ env.APP_PREFIX }}-cli-${{ env.OS_ARCH }}" "${{ env.APP_NAME }}/Contents/MacOS/AlpineZenHelper"
+          else
+            echo "Error: CLI helper binary file not found!"
+            exit 1
+          fi
+
+          echo "Copy assets to resources"
+          if [ -d "assets/macos/dist" ]; then
+            cp -v assets/macos/dist/* "${{ env.APP_NAME }}/Contents/Resources/"
+          else
+            echo "Warning: assets/macos/dist directory does not exist or is empty."
+          fi
+
+      - name: Sign app
+        run: |
+          codesign --deep --force --options runtime --entitlements assets/macos/entitlements.xml --sign "${{ inputs.apple_team_id }}" "${{ env.APP_NAME }}"
+
+      - name: Verify app signature
+        run: |
+          if ! codesign --verify --verbose "${{ env.APP_NAME }}"; then
+            echo "App signature verification failed"
+            exit 1
+          fi
+
+      - name: Create DMG
+        run: |
+          npx create-dmg "${{ env.APP_NAME }}" --overwrite --dmg-title="AlpineZen Wallpaper ${{ env.VERSION }}"
+
+      - name: Rename DMG
+        run: mv AlpineZen*.dmg ${{ env.APP_PREFIX }}-${{ env.OS_ARCH }}.dmg
+
+      - name: Upload unsigned DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-${{ env.APP_PREFIX }}-${{ env.OS_ARCH }}.dmg
+          path: ${{ env.APP_PREFIX }}-${{ env.OS_ARCH }}.dmg
+
+      - name: Sign DMG
+        run: |
+          codesign --verbose --force --sign "${{ inputs.apple_team_id }}" ${{ env.APP_PREFIX }}-${{ env.OS_ARCH }}.dmg
+
+      - name: Verify DMG signature
+        run: |
+          if ! codesign --verify --verbose ${{ env.APP_PREFIX }}-${{ env.OS_ARCH }}.dmg; then
+            echo "DMG signature verification failed"
+            exit 1
+          fi
+
+      - name: Notarize DMG
+        id: notarize_dmg
+        run: |
+          xcrun notarytool submit ${{ env.APP_PREFIX }}-${{ env.OS_ARCH }}.dmg --apple-id "${{ secrets.apple_notary_user }}" --password "${{ secrets.apple_notary_password }}" --team-id "${{ inputs.apple_team_id }}" --wait --verbose --output-format json > notarization-dmg-result.json
+
+      - name: Check DMG notarization status
+        run: |
+          NOTARIZATION_STATUS=$(jq -r '.status' notarization-dmg-result.json)
+          if [ "$NOTARIZATION_STATUS" != "Accepted" ]; then
+            echo "DMG notarization failed or is not yet accepted."
+            cat notarization-dmg-result.json
+            exit 1
+          fi
+
+      - name: Staple DMG notarization ticket
+        run: |
+          xcrun stapler staple ${{ env.APP_PREFIX }}-${{ env.OS_ARCH }}.dmg
+
+      - name: Verify stapled DMG
+        run: |
+          if ! spctl -a -t open --context context:primary-signature -v ${{ env.APP_PREFIX }}-${{ env.OS_ARCH }}.dmg; then
+            echo "Stapling verification failed"
+            exit 1
+          fi
+
+      - name: Upload signed DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-${{ env.APP_PREFIX }}-${{ env.OS_ARCH }}.dmg
+          path: ${{ env.APP_PREFIX }}-${{ env.OS_ARCH }}.dmg
+
+      - name: Clean up keychain
+        run: |
+          security delete-keychain build.keychain

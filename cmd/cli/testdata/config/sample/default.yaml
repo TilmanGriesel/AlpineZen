@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: 2024 Tilman Griesel
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+config: version 0.0.3
+
+input:
+  url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/JPG_Test.jpg/1280px-JPG_Test.jpg"
+  terms: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/JPG_Test.jpg/"
+  crop_factor: 1.1
+  offset_x: -0.11
+  offset_y: 0.05
+
+scheduling:
+  update_interval_minutes: 15
+
+image_processing:
+  blur_strength: 1
+  contrast: 1.5
+  saturation: 0.6
+  brightness: 0.0
+  hue: 0.0
+  gamma: 1.0
+  black_point: 0.0
+  white_point: 1.0
+  shadow_strength: 1.0
+  sharpen_strength: 0.0
+  max_noise_opacity: 0.12
+  resize_width: 3840
+  resize_height: 2160
+
+output:
+  save_path: "wikipedia"

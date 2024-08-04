@@ -1,0 +1,137 @@
+// SPDX-FileCopyrightText: 2024 Tilman Griesel
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+package repository
+
+import (
+	"archive/zip"
+	"bytes"
+	"fmt"
+	"io"
+	"math"
+	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
+	"time"
+
+	"github.com/TilmanGriesel/AlpineZen/pkg/sanitizer"
+)
+
+const (
+	maxFileSize       = 10 * 1024 * 1024  // 10 MB
+	maxTotalSize      = 100 * 1024 * 1024 // 100 MB
+	maxSingleFileSize = 50 * 1024 * 1024  // 50 MB
+)
+
+func GetRepoFolderName(repoURL string) string {
+	re := regexp.MustCompile(`([^/]+)/archive/refs/heads/([^/]+)\.zip$`)
+	matches := re.FindStringSubmatch(repoURL)
+	if len(matches) != 3 {
+		return ""
+	}
+	return fmt.Sprintf("%s-%s", matches[1], matches[2])
+}
+
+func DownloadAndExtractZip(url, path string) error {
+	if err := os.MkdirAll(filepath.Clean(path), 0750); err != nil {
+		return fmt.Errorf("failed to create directory: %s %w", path, err)
+	}
+
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+	resp, err := client.Get(url)
+	if err != nil {
+		return fmt.Errorf("failed to download zip file: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to download zip file: status code %d", resp.StatusCode)
+	}
+
+	buf := new(bytes.Buffer)
+	_, err = io.CopyN(buf, resp.Body, maxFileSize+1)
+	if err != nil && err != io.EOF {
+		return fmt.Errorf("failed to read zip file: %w", err)
+	}
+
+	if buf.Len() > maxFileSize {
+		return fmt.Errorf("downloaded file is too large")
+	}
+
+	if err = extractZip(buf, path); err != nil {
+		return fmt.Errorf("failed to extract zip file: %w", err)
+	}
+
+	return nil
+}
+
+func extractZip(buf *bytes.Buffer, extractTo string) error {
+	zipReader, err := zip.NewReader(bytes.NewReader(buf.Bytes()), int64(buf.Len()))
+	if err != nil {
+		return fmt.Errorf("failed to create zip reader: %w", err)
+	}
+
+	absExtractTo, err := filepath.Abs(extractTo)
+	if err != nil {
+		return fmt.Errorf("failed to resolve absolute path for extraction directory: %w", err)
+	}
+
+	var totalSize int64
+	for _, f := range zipReader.File {
+		if totalSize += int64(f.UncompressedSize64); totalSize > maxTotalSize {
+			return fmt.Errorf("total uncompressed size exceeds limit")
+		}
+
+		if f.UncompressedSize64 > maxSingleFileSize {
+			return fmt.Errorf("file %s exceeds max single file size limit", f.Name)
+		}
+
+		sanitizedPath, err := sanitizer.SanitizeArchivePath(absExtractTo, f.Name)
+		if err != nil {
+			return fmt.Errorf("sanitization error: %w", err)
+		}
+
+		if f.FileInfo().IsDir() {
+			if err := os.MkdirAll(sanitizedPath, f.Mode()); err != nil {
+				return fmt.Errorf("failed to create directory %s: %w", sanitizedPath, err)
+			}
+			continue
+		}
+
+		if err := os.MkdirAll(filepath.Dir(sanitizedPath), 0750); err != nil {
+			return fmt.Errorf("failed to create directory for file %s: %w", sanitizedPath, err)
+		}
+
+		if err = extractFile(f, sanitizedPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func extractFile(f *zip.File, path string) error {
+	outFile, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+	if err != nil {
+		return fmt.Errorf("failed to open file %s for writing: %w", path, err)
+	}
+	defer outFile.Close()
+
+	rc, err := f.Open()
+	if err != nil {
+		return fmt.Errorf("failed to open zip entry %s: %w", f.Name, err)
+	}
+	defer rc.Close()
+
+	if sizeToCopy := int64(f.UncompressedSize64); sizeToCopy > math.MaxInt64 {
+		return fmt.Errorf("file %s is too large to process", f.Name)
+	} else if _, err = io.CopyN(outFile, rc, sizeToCopy); err != nil {
+		return fmt.Errorf("failed to write file %s: %w", path, err)
+	}
+
+	return nil
+}

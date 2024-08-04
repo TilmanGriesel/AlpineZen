@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: 2024 Tilman Griesel
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Test Job
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: ["main"]
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux]
+        arch: [amd64]
+
+    env:
+      GO_VERSION: "1.22.5"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run Tests
+        run: go test ./... -v

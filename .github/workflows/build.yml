@@ -1,0 +1,107 @@
+# SPDX-FileCopyrightText: 2024 Tilman Griesel
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Build Job
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os == 'darwin' && 'macos-latest' || 'ubuntu-latest' }}
+    strategy:
+      matrix:
+        os: [darwin, windows, linux]
+        arch: [arm64, amd64]
+      fail-fast: false
+
+    env:
+      GO_VERSION: "1.22.5"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Set default version
+        run: echo "VERSION=dev" >> $GITHUB_ENV
+
+      - name: Get version from tag
+        if: startsWith(github.ref, 'refs/tags/')
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Get build number
+        id: get_build_number
+        run: echo "BUILD_NUMBER=${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
+
+      - name: Create dist directory
+        run: mkdir -p dist
+
+      - name: Set GO environment variables
+        run: |
+          echo "GOOS=${{ matrix.os }}" >> $GITHUB_ENV
+          echo "GOARCH=${{ matrix.arch }}" >> $GITHUB_ENV
+
+      - name: Set CLI output binary name
+        run: |
+          CLI_BINARY_NAME="alpinezen-wallpaper-cli-${{ matrix.os }}-${{ matrix.arch }}"
+          if [ "${{ matrix.os }}" == "windows" ]; then
+            CLI_BINARY_NAME="${CLI_BINARY_NAME}.exe"
+          fi
+          echo "CLI_BINARY_NAME=${CLI_BINARY_NAME}" >> $GITHUB_ENV
+
+      - name: Set UI output binary name
+        run: |
+          UI_BINARY_NAME="alpinezen-wallpaper-ui-${{ matrix.os }}-${{ matrix.arch }}"
+          if [ "${{ matrix.os }}" == "windows" ]; then
+            CLI_BINARY_NAME="${CLI_BINARY_NAME}.exe"
+          fi
+          echo "UI_BINARY_NAME=${UI_BINARY_NAME}" >> $GITHUB_ENV
+
+      - name: Build CLI binary
+        if: matrix.os != 'darwin'
+        run: |
+          go build -v \
+            -ldflags '-X main.version=${{ env.VERSION }} -X main.buildNumber=${{ env.BUILD_NUMBER }}' \
+            -o dist/${{ env.CLI_BINARY_NAME }} ./cmd/cli
+
+      - name: Build macOS CLI binaries with plist embedding
+        if: matrix.os == 'darwin'
+        run: |
+          CGO_ENABLED=1 go build -v \
+            -ldflags '-extldflags "-sectcreate __TEXT __info_plist assets/macos/cli_info.plist" -X main.version=${{ env.VERSION }} -X main.buildNumber=${{ env.BUILD_NUMBER }}' \
+            -o dist/${{ env.CLI_BINARY_NAME }} ./cmd/cli
+
+          otool -s __TEXT __info_plist dist/${{ env.CLI_BINARY_NAME }}
+
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} CGO_ENABLED=1 go build -v \
+          -ldflags '-extldflags "-sectcreate __TEXT __info_plist assets/macos/ui_info.plist" -X main.version=${{ env.VERSION }} -X main.buildNumber=${{ env.BUILD_NUMBER }}' \
+          -o dist/${{ env.UI_BINARY_NAME }} ./cmd/ui
+
+          otool -s __TEXT __info_plist dist/${{ env.UI_BINARY_NAME }}
+
+      - name: Create tar.gz
+        run: |
+          cd dist
+          # Add CLI binary to tar if it exists
+          if [ -f "${{ env.CLI_BINARY_NAME }}" ]; then
+            tar -rvf alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.tar ${{ env.CLI_BINARY_NAME }}
+          fi
+          # Add UI binary to tar if it exists
+          if [ -f "${{ env.UI_BINARY_NAME }}" ]; then
+            tar -rvf alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.tar ${{ env.UI_BINARY_NAME }}
+          fi
+          # Compress tar file
+          gzip alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.tar
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          path: dist/alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.tar.gz

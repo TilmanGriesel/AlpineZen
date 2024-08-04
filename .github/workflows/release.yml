@@ -1,0 +1,71 @@
+# SPDX-FileCopyrightText: 2024 Tilman Griesel
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Release Job
+
+on:
+  workflow_call:
+    secrets:
+      token:
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set default version
+        run: echo "VERSION=dev" >> $GITHUB_ENV
+
+      - name: Get version from tag
+        if: startsWith(github.ref, 'refs/tags/')
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Get build number
+        id: get_build_number
+        run: echo "BUILD_NUMBER=${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
+
+      - name: Debug Information
+        run: |
+          echo "Release tag: ${{ github.ref }}"
+          echo "Workflow name: ${{ github.workflow }}"
+          echo "Job name: ${{ github.job }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Version: ${{ env.VERSION }}"
+          echo "Build Number: ${{ env.BUILD_NUMBER }}"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: .
+
+      - name: Rename artifacts with version and build number
+        run: |
+          find . -type f \( -name "*.tar.gz" -o -name "*.dmg" \) | while read file; do
+            dir=$(dirname "$file")
+            base=$(basename "$file")
+
+            if [[ "$base" =~ \.tar\.gz$ ]]; then
+              name="${base%.tar.gz}"
+              new_name="${name}-${VERSION}.tar.gz"
+            else
+              name="${base%.*}"
+              ext="${base##*.}"
+              new_name="${name}-${VERSION}.${ext}"
+            fi
+
+            mv "$file" "$dir/$new_name"
+          done
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.token }}
+          artifacts: "**/*.tar.gz,**/*.dmg"
