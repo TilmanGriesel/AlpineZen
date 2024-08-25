@@ -80,6 +80,7 @@ type WallpaperManagerConfig struct {
 		UpdateIntervalMinutes int `yaml:"update_interval_minutes"`
 	} `yaml:"scheduling"`
 	Output struct {
+		Blend    bool   `yaml:"blend"`
 		SavePath string `yaml:"save_path"`
 	} `yaml:"output"`
 }
@@ -271,7 +272,7 @@ func (wm *WallpaperManager) fetchAndProcessImage(tempImageFilePath, previousProc
 		return nil, err
 	}
 
-	if util.FileExists(previousProcImageFilePath) {
+	if wm.WallpaperManagerConfig.Output.Blend && util.FileExists(previousProcImageFilePath) {
 		previousImage, err := util.LoadImageFile(previousProcImageFilePath)
 		if err != nil {
 			logger.WithError(err).Warn("Failed to load previous processed image")
