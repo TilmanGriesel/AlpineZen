@@ -57,4 +57,4 @@ regen-assets:
 	./assets/macos/scripts/compile_assets.sh
 
 repo-cleanup:
-	bash tools/rc_repo_cleanup.sh
+	./tool/rc_repo_cleanup.sh
