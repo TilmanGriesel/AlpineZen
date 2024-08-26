@@ -6,6 +6,7 @@ package wallpaper
 
 import (
 	"image"
+	"image/jpeg"
 	"image/png"
 	"os"
 	"path/filepath"
@@ -308,20 +309,61 @@ func (wm *WallpaperManager) saveFinalImage(finalImage image.Image, imageFilePath
 }
 
 func (wm *WallpaperManager) applyWallpaper(imageFilePath, latestFilePath string) error {
+	// Set wallpaper if update is not disabled
 	if !wm.WallpaperConfig.DisableOSWallpaperUpdate {
 		if err := wm.setWallpaper(imageFilePath); err != nil {
 			logger.WithError(err).Fatal("Failed to set wallpaper")
 			return err
 		}
+		return nil
 	}
 
+	// Disabled OS wallpaper config is intended for headless server use
+	// Let's serve the wallpaper as the original PNG and an JPG version as a convienient latest file.
+
+	// Copy original image file to the latestFilePath
 	if err := util.CopyFile(imageFilePath, latestFilePath); err != nil {
 		logger.WithError(err).Warning("Failed to copy final image to latest")
+		return err
+	}
+
+	// Open the copied file
+	copiedFile, err := os.Open(filepath.Clean(latestFilePath))
+	if err != nil {
+		logger.WithError(err).Warning("Failed to open copied image file")
+		return err
+	}
+	defer copiedFile.Close()
+
+	// Decode the image
+	img, _, err := image.Decode(copiedFile)
+	if err != nil {
+		logger.WithError(err).Warning("Failed to decode image file")
+		return err
+	}
+
+	// Create a new file with .jpg extension
+	jpgFilePath := latestFilePath
+	if filepath.Ext(latestFilePath) != ".jpg" {
+		jpgFilePath = latestFilePath[:len(latestFilePath)-len(filepath.Ext(latestFilePath))] + ".jpg"
+	}
+
+	jpgFile, err := os.Create(filepath.Clean(jpgFilePath))
+	if err != nil {
+		logger.WithError(err).Warning("Failed to create JPEG file")
+		return err
+	}
+	defer jpgFile.Close()
+
+	// Encode image as JPEG
+	opts := &jpeg.Options{Quality: 100}
+	if err := jpeg.Encode(jpgFile, img, opts); err != nil {
+		logger.WithError(err).Warning("Failed to encode image as JPEG")
+		return err
 	}
 
 	return nil
 }
-
 func (wm *WallpaperManager) UpdateWallpaper(fetchSource, deepClean bool) {
 	logger.WithField("fetchSource", fetchSource).WithField("deepClean", deepClean).Debug("Updating wallpaper")
 
