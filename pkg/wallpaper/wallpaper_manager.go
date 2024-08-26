@@ -319,7 +319,7 @@ func (wm *WallpaperManager) applyWallpaper(imageFilePath, latestFilePath string)
 	}
 
 	// Disabled OS wallpaper config is intended for headless server use
-	// Let's serve the wallpaper as the original PNG and an JPG version as a convienient latest file.
+	// Serve the wallpaper as the original PNG and a JPG version as a convenient latest file.
 
 	// Copy original image file to the latestFilePath
 	if err := util.CopyFile(imageFilePath, latestFilePath); err != nil {
@@ -355,15 +355,32 @@ func (wm *WallpaperManager) applyWallpaper(imageFilePath, latestFilePath string)
 	}
 	defer jpgFile.Close()
 
-	// Encode image as JPEG
+	// Encode JPEG image
 	opts := &jpeg.Options{Quality: 100}
 	if err := jpeg.Encode(jpgFile, img, opts); err != nil {
 		logger.WithError(err).Warning("Failed to encode image as JPEG")
 		return err
 	}
 
+	// Set up archive folder path
+	archiveFolderPath := filepath.Join(filepath.Dir(jpgFilePath), "archive")
+
+	// Create archive folder
+	if err := os.MkdirAll(archiveFolderPath, os.ModePerm); err != nil {
+		logger.WithError(err).Warning("Failed to create archive directory")
+		return err
+	}
+
+	// Copy JPEG file to archive folder
+	archiveFilePath := filepath.Join(archiveFolderPath, filepath.Base(jpgFilePath))
+	if err := util.CopyFile(jpgFilePath, archiveFilePath); err != nil {
+		logger.WithError(err).Warning("Failed to archive JPEG file")
+		return err
+	}
+
 	return nil
 }
+
 func (wm *WallpaperManager) UpdateWallpaper(fetchSource, deepClean bool) {
 	logger.WithField("fetchSource", fetchSource).WithField("deepClean", deepClean).Debug("Updating wallpaper")
 

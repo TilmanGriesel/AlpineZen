@@ -23,7 +23,7 @@ RUN apk add --no-cache caddy
 
 RUN mkdir -p /srv/latest_wallpaper
 
-RUN ln -sf /root/.alpinezen_wallpaper/latest.png /srv/latest_wallpaper/latest.png
+RUN ln -sf /root/.alpinezen_wallpaper/latest.jpg /srv/latest_wallpaper/latest.jpg
 
 # Make the script executable
 RUN chmod +x /app/entrypoint.sh
