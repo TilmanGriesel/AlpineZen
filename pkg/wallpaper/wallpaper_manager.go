@@ -5,6 +5,7 @@
 package wallpaper
 
 import (
+	"fmt"
 	"image"
 	"image/jpeg"
 	"image/png"
@@ -308,6 +309,59 @@ func (wm *WallpaperManager) saveFinalImage(finalImage image.Image, imageFilePath
 	return nil
 }
 
+func (wm *WallpaperManager) convertAndArchiveJPEG(imageFilePath, latestFilePath string) (string, error) {
+	imageFile, err := os.Open(filepath.Clean(imageFilePath))
+	if err != nil {
+		logger.WithError(err).Warning("Failed to open image file")
+		return "", err
+	}
+	defer imageFile.Close()
+
+	img, _, err := image.Decode(imageFile)
+	if err != nil {
+		logger.WithError(err).Warning("Failed to decode image file")
+		return "", err
+	}
+
+	jpgFilePath := latestFilePath
+	if filepath.Ext(latestFilePath) != ".jpg" {
+		jpgFilePath = latestFilePath[:len(latestFilePath)-len(filepath.Ext(latestFilePath))] + ".jpg"
+	}
+
+	jpgFile, err := os.Create(filepath.Clean(jpgFilePath))
+	if err != nil {
+		logger.WithError(err).Warning("Failed to create JPEG file")
+		return "", err
+	}
+	defer jpgFile.Close()
+
+	opts := &jpeg.Options{Quality: 100}
+	if err := jpeg.Encode(jpgFile, img, opts); err != nil {
+		logger.WithError(err).Warning("Failed to encode image as JPEG")
+		return "", err
+	}
+
+	archiveFolderPath := filepath.Join(filepath.Dir(jpgFilePath), "archive")
+
+	if err := os.MkdirAll(archiveFolderPath, os.ModePerm); err != nil {
+		logger.WithError(err).Warning("Failed to create archive directory")
+		return "", err
+	}
+
+	currentTime := time.Now()
+	dateTimeSuffix := currentTime.Format("20060102_150405")
+
+	archiveFileName := fmt.Sprintf("%s_%s%s", filepath.Base(jpgFilePath[:len(jpgFilePath)-len(filepath.Ext(jpgFilePath))]), dateTimeSuffix, ".jpg")
+
+	archiveFilePath := filepath.Join(archiveFolderPath, archiveFileName)
+	if err := util.CopyFile(jpgFilePath, archiveFilePath); err != nil {
+		logger.WithError(err).Warning("Failed to archive JPEG file")
+		return "", err
+	}
+
+	return archiveFilePath, nil
+}
+
 func (wm *WallpaperManager) applyWallpaper(imageFilePath, latestFilePath string) error {
 	// Set wallpaper if update is not disabled
 	if !wm.WallpaperConfig.DisableOSWallpaperUpdate {
@@ -321,60 +375,15 @@ func (wm *WallpaperManager) applyWallpaper(imageFilePath, latestFilePath string)
 	// Disabled OS wallpaper config is intended for headless server use
 	// Serve the wallpaper as the original PNG and a JPG version as a convenient latest file.
 
-	// Copy original image file to the latestFilePath
+	// Copy original image file to latestFilePath
 	if err := util.CopyFile(imageFilePath, latestFilePath); err != nil {
 		logger.WithError(err).Warning("Failed to copy final image to latest")
 		return err
 	}
 
-	// Open the copied file
-	copiedFile, err := os.Open(filepath.Clean(latestFilePath))
-	if err != nil {
-		logger.WithError(err).Warning("Failed to open copied image file")
-		return err
-	}
-	defer copiedFile.Close()
-
-	// Decode the image
-	img, _, err := image.Decode(copiedFile)
-	if err != nil {
-		logger.WithError(err).Warning("Failed to decode image file")
-		return err
-	}
-
-	// Create a new file with .jpg extension
-	jpgFilePath := latestFilePath
-	if filepath.Ext(latestFilePath) != ".jpg" {
-		jpgFilePath = latestFilePath[:len(latestFilePath)-len(filepath.Ext(latestFilePath))] + ".jpg"
-	}
-
-	jpgFile, err := os.Create(filepath.Clean(jpgFilePath))
-	if err != nil {
-		logger.WithError(err).Warning("Failed to create JPEG file")
-		return err
-	}
-	defer jpgFile.Close()
-
-	// Encode JPEG image
-	opts := &jpeg.Options{Quality: 100}
-	if err := jpeg.Encode(jpgFile, img, opts); err != nil {
-		logger.WithError(err).Warning("Failed to encode image as JPEG")
-		return err
-	}
-
-	// Set up archive folder path
-	archiveFolderPath := filepath.Join(filepath.Dir(jpgFilePath), "archive")
-
-	// Create archive folder
-	if err := os.MkdirAll(archiveFolderPath, os.ModePerm); err != nil {
-		logger.WithError(err).Warning("Failed to create archive directory")
-		return err
-	}
-
-	// Copy JPEG file to archive folder
-	archiveFilePath := filepath.Join(archiveFolderPath, filepath.Base(jpgFilePath))
-	if err := util.CopyFile(jpgFilePath, archiveFilePath); err != nil {
-		logger.WithError(err).Warning("Failed to archive JPEG file")
+	// Convert copied image to JPEG and archive
+	if _, err := wm.convertAndArchiveJPEG(latestFilePath, latestFilePath); err != nil {
+		logger.WithError(err).Warning("Failed to convert and archive JPEG file")
 		return err
 	}
 
