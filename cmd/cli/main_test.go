@@ -72,6 +72,7 @@ func TestProcessFlagsAndRun(t *testing.T) {
 	os.Args = []string{
 		"alpinezen",
 		"--config-path", configPath,
+		"--runtime-headless=true",
 		"--runtime-cpu-cores", "2",
 	}
 
