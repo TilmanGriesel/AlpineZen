@@ -40,7 +40,7 @@ var (
 type WallpaperManager struct {
 	WallpaperManagerConfig WallpaperManagerConfig
 	WallpaperConfig        WallpaperConfig
-	noiseImg               image.NRGBA
+	noiseImg               *image.NRGBA
 	configPath             string
 	updateCount            int
 }
@@ -157,12 +157,21 @@ func (wm *WallpaperManager) applyNoise(img image.Image, maxOpacity float64, scal
 			scale = 1
 		}
 
-		lowWidth := width / scale
-		lowHeight := height / scale
+		scaledWidth := width / scale
+		scaledHeight := height / scale
 
-		noiseImg := postprocess.CreateNoiseImage(lowWidth, lowHeight)
-		noiseImg = imaging.Resize(noiseImg, width, height, imaging.NearestNeighbor)
-		return imaging.Overlay(img, noiseImg, image.Pt(0, 0), scaledOpacity)
+		if wm.noiseImg == nil || wm.noiseImg.Bounds().Dx() != scaledWidth || wm.noiseImg.Bounds().Dy() != scaledHeight {
+			logger.Debug("Generating new noise image")
+			wm.noiseImg = postprocess.CreateNoiseImage(scaledWidth, scaledHeight)
+		} else {
+			logger.Debug("Reusing existing noise image")
+		}
+
+		resizedNoiseImg := imaging.Resize(wm.noiseImg, width, height, imaging.Lanczos)
+
+		blurredNoiseImg := imaging.Blur(resizedNoiseImg, 1.0)
+
+		return imaging.Overlay(img, blurredNoiseImg, image.Pt(0, 0), scaledOpacity)
 	}
 
 	logger.Debug("Image is not bright enough, returning original image")

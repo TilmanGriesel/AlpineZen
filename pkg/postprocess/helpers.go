@@ -5,11 +5,8 @@
 package postprocess
 
 import (
-	"crypto/rand"
 	"image"
 	"image/color"
-	"log"
-	"math/big"
 )
 
 func CalculateAverageBrightness(img image.Image) float64 {
@@ -50,11 +47,13 @@ func CreateNoiseImage(width, height int) *image.NRGBA {
 	img := image.NewNRGBA(image.Rect(0, 0, width, height))
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			v, err := rand.Int(rand.Reader, big.NewInt(256))
-			if err != nil {
-				log.Fatalf("failed to generate random number: %v", err)
+			var v uint8
+			if getRandomBoolWithWrap() {
+				v = 255
+			} else {
+				v = 0
 			}
-			img.SetNRGBA(x, y, color.NRGBA{uint8(v.Int64()), uint8(v.Int64()), uint8(v.Int64()), 255})
+			img.SetNRGBA(x, y, color.NRGBA{v, v, v, 255})
 		}
 	}
 	return img
