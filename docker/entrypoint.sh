@@ -8,7 +8,7 @@ cat <<EOF > /tmp/Caddyfile
 :80 {
     root * /srv/latest_wallpaper
     file_server
-    rewrite / /latest.png
+    rewrite / /latest.jpg
 }
 EOF
 
