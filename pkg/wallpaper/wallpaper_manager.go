@@ -343,7 +343,7 @@ func (wm *WallpaperManager) convertAndArchiveJPEG(imageFilePath, latestFilePath 
 
 	archiveFolderPath := filepath.Join(filepath.Dir(jpgFilePath), "archive")
 
-	if err := os.MkdirAll(archiveFolderPath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(archiveFolderPath, 0750); err != nil {
 		logger.WithError(err).Warning("Failed to create archive directory")
 		return "", err
 	}
