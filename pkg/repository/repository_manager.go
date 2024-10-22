@@ -132,8 +132,7 @@ func extractFile(f *zip.File, path string) error {
 		return fmt.Errorf("uncompressed size too large: %d", f.UncompressedSize64)
 	}
 
-	sizeToCopy := int64(f.UncompressedSize64)
-	if _, err = io.CopyN(outFile, rc, sizeToCopy); err != nil {
+	if _, err = io.Copy(outFile, rc); err != nil {
 		return fmt.Errorf("failed to write file %s: %w", path, err)
 	}
 
