@@ -80,9 +80,10 @@ func extractZip(buf *bytes.Buffer, extractTo string) error {
 		return fmt.Errorf("failed to resolve absolute path for extraction directory: %w", err)
 	}
 
-	var totalSize int64
+	var totalSize uint64
 	for _, f := range zipReader.File {
-		if totalSize += int64(f.UncompressedSize64); totalSize > maxTotalSize {
+		totalSize += f.UncompressedSize64
+		if totalSize > maxTotalSize {
 			return fmt.Errorf("total uncompressed size exceeds limit")
 		}
 
@@ -127,9 +128,12 @@ func extractFile(f *zip.File, path string) error {
 	}
 	defer rc.Close()
 
-	if sizeToCopy := int64(f.UncompressedSize64); sizeToCopy > math.MaxInt64 {
+	if f.UncompressedSize64 > uint64(math.MaxInt64) {
 		return fmt.Errorf("file %s is too large to process", f.Name)
-	} else if _, err = io.CopyN(outFile, rc, sizeToCopy); err != nil {
+	}
+
+	sizeToCopy := int64(f.UncompressedSize64)
+	if _, err = io.CopyN(outFile, rc, sizeToCopy); err != nil {
 		return fmt.Errorf("failed to write file %s: %w", path, err)
 	}
 
