@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -116,6 +115,8 @@ func extractZip(buf *bytes.Buffer, extractTo string) error {
 }
 
 func extractFile(f *zip.File, path string) error {
+	const maxFileSize = 10 * 1024 * 1024
+
 	outFile, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 	if err != nil {
 		return fmt.Errorf("failed to open file %s for writing: %w", path, err)
@@ -128,12 +129,21 @@ func extractFile(f *zip.File, path string) error {
 	}
 	defer rc.Close()
 
-	if f.UncompressedSize64 > math.MaxInt64 {
+	if f.UncompressedSize64 > uint64(maxFileSize) {
 		return fmt.Errorf("uncompressed size too large: %d", f.UncompressedSize64)
 	}
 
-	if _, err = io.Copy(outFile, rc); err != nil {
+	limitedReader := &io.LimitedReader{
+		R: rc,
+		N: int64(maxFileSize),
+	}
+
+	if _, err = io.Copy(outFile, limitedReader); err != nil {
 		return fmt.Errorf("failed to write file %s: %w", path, err)
+	}
+
+	if limitedReader.N <= 0 {
+		return fmt.Errorf("decompressed file %s exceeds the allowed size limit", path)
 	}
 
 	return nil
