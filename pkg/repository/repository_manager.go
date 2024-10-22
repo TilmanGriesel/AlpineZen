@@ -128,8 +128,8 @@ func extractFile(f *zip.File, path string) error {
 	}
 	defer rc.Close()
 
-	if f.UncompressedSize64 > uint64(math.MaxInt64) {
-		return fmt.Errorf("file %s is too large to process", f.Name)
+	if f.UncompressedSize64 > math.MaxInt64 {
+		return fmt.Errorf("uncompressed size too large: %d", f.UncompressedSize64)
 	}
 
 	sizeToCopy := int64(f.UncompressedSize64)
