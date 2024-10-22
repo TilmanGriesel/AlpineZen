@@ -51,7 +51,7 @@ release: clean package
 
 # Helper targets
 licenses:
-	python3 tools/add_license_headers.py
+	python3 tool/add_license_headers.py
 
 regen-assets:
 	./assets/macos/scripts/compile_assets.sh
