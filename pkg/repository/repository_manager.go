@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	maxFileSize       = 10 * 1024 * 1024  // 10 MB
-	maxTotalSize      = 100 * 1024 * 1024 // 100 MB
-	maxSingleFileSize = 50 * 1024 * 1024  // 50 MB
+	maxCompressedFileSize = 10 * 1024 * 1024  // 10 MB
+	maxUncompressedSize   = 100 * 1024 * 1024 // 100 MB
+	maxSingleFileSize     = 50 * 1024 * 1024  // 50 MB
 )
 
 func GetRepoFolderName(repoURL string) string {
@@ -52,12 +52,12 @@ func DownloadAndExtractZip(url, path string) error {
 	}
 
 	buf := new(bytes.Buffer)
-	_, err = io.CopyN(buf, resp.Body, maxFileSize+1)
+	_, err = io.CopyN(buf, resp.Body, maxCompressedFileSize+1)
 	if err != nil && err != io.EOF {
 		return fmt.Errorf("failed to read zip file: %w", err)
 	}
 
-	if buf.Len() > maxFileSize {
+	if buf.Len() > maxCompressedFileSize {
 		return fmt.Errorf("downloaded file is too large")
 	}
 
@@ -82,7 +82,7 @@ func extractZip(buf *bytes.Buffer, extractTo string) error {
 	var totalSize uint64
 	for _, f := range zipReader.File {
 		totalSize += f.UncompressedSize64
-		if totalSize > maxTotalSize {
+		if totalSize > maxUncompressedSize {
 			return fmt.Errorf("total uncompressed size exceeds limit")
 		}
 
