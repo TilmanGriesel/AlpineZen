@@ -1,6 +1,12 @@
 # Builder stage
 FROM golang:1.22.3-alpine as builder
 
+ARG VERSION=latest
+ENV APP_VERSION=$VERSION
+
+ARG BUILD_NUM=0
+ENV APP_BUILD_NUM=$BUILD_NUM
+
 WORKDIR /app
 
 COPY go.mod go.sum ./
@@ -25,7 +31,6 @@ RUN mkdir -p /srv/latest_wallpaper
 
 RUN ln -sf /root/.alpinezen_wallpaper/latest.jpg /srv/latest_wallpaper/latest.jpg
 
-# Make the script executable
 RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 80
