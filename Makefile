@@ -13,7 +13,6 @@ all: build-run
 clean:
 	rm -rf $(BUILD_DIR) $(DIST_DIR)
 
-# Pattern rule to build for each platform and architecture
 $(BUILD_DIR)/$(APP_NAME)-%:
 	@platform=$(word 1,$(subst -, ,$*)); \
 	arch=$(word 2,$(subst -, ,$*)); \
@@ -49,7 +48,6 @@ package: $(EXECUTABLES)
 
 release: clean package
 
-# Helper targets
 licenses:
 	python3 tool/add_license_headers.py
 

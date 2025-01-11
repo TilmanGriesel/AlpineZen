@@ -9,6 +9,7 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -135,7 +136,30 @@ func (wm *WallpaperManager) enhanceImage(img image.Image) image.Image {
 
 	enhancedImg := processor.ApplyEnhancements(img)
 	sharpenedImage := imaging.Sharpen(enhancedImg, wm.WallpaperManagerConfig.ImageProcessing.SharpenStrength)
-	return imaging.Resize(sharpenedImage, wm.WallpaperConfig.TargetDimensions.Width, wm.WallpaperConfig.TargetDimensions.Height, imaging.Lanczos)
+
+	srcWidth := sharpenedImage.Bounds().Dx()
+	srcHeight := sharpenedImage.Bounds().Dy()
+	targetWidth := wm.WallpaperConfig.TargetDimensions.Width
+	targetHeight := wm.WallpaperConfig.TargetDimensions.Height
+
+	widthRatio := float64(targetWidth) / float64(srcWidth)
+	heightRatio := float64(targetHeight) / float64(srcHeight)
+
+	scale := math.Max(widthRatio, heightRatio)
+
+	newWidth := int(float64(srcWidth) * scale)
+	newHeight := int(float64(srcHeight) * scale)
+
+	resized := imaging.Resize(sharpenedImage, newWidth, newHeight, imaging.Lanczos)
+
+	cropX := (newWidth - targetWidth) / 2
+	cropY := (newHeight - targetHeight) / 2
+	cropRect := image.Rectangle{
+		Min: image.Point{cropX, cropY},
+		Max: image.Point{cropX + targetWidth, cropY + targetHeight},
+	}
+
+	return imaging.Crop(resized, cropRect)
 }
 
 func (wm *WallpaperManager) applyBlur(img image.Image) image.Image {

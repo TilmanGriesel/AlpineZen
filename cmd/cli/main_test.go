@@ -101,6 +101,4 @@ func TestMainLoop(t *testing.T) {
 
 	// Allow loop to run for a short period
 	time.Sleep(2 * time.Second)
-
-	// No specific assertions, but ensure no panics or errors occur
 }
