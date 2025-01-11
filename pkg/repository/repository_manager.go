@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/TilmanGriesel/AlpineZen/pkg/sanitizer"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -38,34 +39,41 @@ func DownloadAndExtractZip(url, path string) error {
 		return fmt.Errorf("failed to create directory: %s %w", path, err)
 	}
 
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-	resp, err := client.Get(url)
-	if err != nil {
-		return fmt.Errorf("failed to download zip file: %w", err)
-	}
-	defer resp.Body.Close()
+	config := DefaultRetryConfig()
+	config.Logger = logrus.StandardLogger()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to download zip file: status code %d", resp.StatusCode)
+	downloadOperation := func() error {
+		client := &http.Client{
+			Timeout: 30 * time.Second,
+		}
+		resp, err := client.Get(url)
+		if err != nil {
+			return fmt.Errorf("failed to download zip file: %w", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("failed to download zip file: status code %d", resp.StatusCode)
+		}
+
+		buf := new(bytes.Buffer)
+		_, err = io.CopyN(buf, resp.Body, maxCompressedFileSize+1)
+		if err != nil && err != io.EOF {
+			return fmt.Errorf("failed to read zip file: %w", err)
+		}
+
+		if buf.Len() > maxCompressedFileSize {
+			return fmt.Errorf("downloaded file is too large")
+		}
+
+		if err = extractZip(buf, path); err != nil {
+			return fmt.Errorf("failed to extract zip file: %w", err)
+		}
+
+		return nil
 	}
 
-	buf := new(bytes.Buffer)
-	_, err = io.CopyN(buf, resp.Body, maxCompressedFileSize+1)
-	if err != nil && err != io.EOF {
-		return fmt.Errorf("failed to read zip file: %w", err)
-	}
-
-	if buf.Len() > maxCompressedFileSize {
-		return fmt.Errorf("downloaded file is too large")
-	}
-
-	if err = extractZip(buf, path); err != nil {
-		return fmt.Errorf("failed to extract zip file: %w", err)
-	}
-
-	return nil
+	return RetryWithExponentialBackoff(downloadOperation, config)
 }
 
 func extractZip(buf *bytes.Buffer, extractTo string) error {
