@@ -3,7 +3,7 @@
 # Start CLI in the background
 ./cli --loglevel 3 --clock-disable --runtime-headless "$@" &
 
-# Create config
+# Config
 cat <<EOF > /tmp/Caddyfile
 :80 {
     root * /srv/latest_wallpaper
