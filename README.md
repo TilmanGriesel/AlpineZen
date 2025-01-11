@@ -8,7 +8,7 @@
 
 ---
 
-AlpineZen is an open-source dynamic wallpaper utility that enhances your workspace by setting wallpapers that update periodically. It specializes in integrating live webcam images, creating setups that reflect natural rhythms of day and bringing the outdoors into your work environment.
+**AlpineZen Wallpaper** is an open-source dynamic wallpaper utility that enhances your workspace by setting wallpapers that update periodically. It specializes in integrating live webcam images, creating setups that reflect natural rhythms of day and bringing the outdoors into your work environment.
 
 ## Features
 
@@ -179,10 +179,6 @@ Contributions are welcome! Please ensure your code follows these guidelines:
 
 Long term goals:
 - Proper mixed aspect ratio multi-monitor support
-
-## License
-
-This project is licensed under the GPL-3.0-or-later License. See the LICENSE file for details.
 
 ## Acknowledgments
 
