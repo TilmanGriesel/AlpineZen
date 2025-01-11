@@ -8,8 +8,6 @@
     <a href="https://github.com/TilmanGriesel/AlpineZen/actions/workflows/docs-deploy.yml"><img src="https://img.shields.io/github/actions/workflow/status/TilmanGriesel/AlpineZen/.github%2Fworkflows%2Fdocs-deploy.yml?colorA=F24F32&colorB=F0E6E0&style=for-the-badge&label=Pages"></a>
 </p>
 
----
-
 **AlpineZen Wallpaper** is an open-source dynamic wallpaper utility that enhances your workspace by setting wallpapers that update periodically. It specializes in integrating live webcam images, creating setups that reflect natural rhythms of day and bringing the outdoors into your work environment.
 
 ## Features
