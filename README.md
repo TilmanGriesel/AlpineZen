@@ -1,10 +1,12 @@
 <p align="center"><img src="https://raw.githubusercontent.com/TilmanGriesel/AlpineZen/8c27063d52c33f1848c552c5df1f9d2000e73da7/docs/public/assets/brand/alpinezen_banner_eggshell.svg"/><br/></p>
 
-[![Gosec](https://github.com/TilmanGriesel/AlpineZen/actions/workflows/gosec.yml/badge.svg)](https://github.com/TilmanGriesel/AlpineZen/actions/workflows/gosec.yml)
-[![VulnCheck](https://github.com/TilmanGriesel/AlpineZen/actions/workflows/vulncheck.yml/badge.svg)](https://github.com/TilmanGriesel/AlpineZen/actions/workflows/vulncheck.yml)
-[![Test Job](https://github.com/TilmanGriesel/AlpineZen/actions/workflows/test.yml/badge.svg)](https://github.com/TilmanGriesel/AlpineZen/actions/workflows/test.yml)
-[![Tag Release Version](https://github.com/TilmanGriesel/AlpineZen/actions/workflows/versiontag.yml/badge.svg)](https://github.com/TilmanGriesel/AlpineZen/actions/workflows/versiontag.yml)
-[![Deploy docs site to Pages](https://github.com/TilmanGriesel/AlpineZen/actions/workflows/docs-deploy.yml/badge.svg)](https://github.com/TilmanGriesel/AlpineZen/actions/workflows/docs-deploy.yml)
+<p align="center">
+    <a href="https://github.com/TilmanGriesel/AlpineZen/actions/workflows/gosec.yml"><img src="https://img.shields.io/github/actions/workflow/status/TilmanGriesel/AlpineZen/.github%2Fworkflows%2Fgosec.yml?colorA=F24F32&colorB=F0E6E0&style=for-the-badge&label=Gosec"></a>
+    <a href="https://github.com/TilmanGriesel/AlpineZen/actions/workflows/vulncheck.yml"><img src="https://img.shields.io/github/actions/workflow/status/TilmanGriesel/AlpineZen/.github%2Fworkflows%2Fvulncheck.yml?colorA=F24F32&colorB=F0E6E0&style=for-the-badge&label=VulnCheck"></a>
+    <a href="https://github.com/TilmanGriesel/AlpineZen/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/TilmanGriesel/AlpineZen/.github%2Fworkflows%2Ftest.yml?colorA=F24F32&colorB=F0E6E0&style=for-the-badge&label=Tests"></a>
+    <a href="https://github.com/TilmanGriesel/AlpineZen/actions/workflows/versiontag.yml"><img src="https://img.shields.io/github/actions/workflow/status/TilmanGriesel/AlpineZen/.github%2Fworkflows%2Fversiontag.yml?colorA=F24F32&colorB=F0E6E0&style=for-the-badge&label=Version Tag"></a>
+    <a href="https://github.com/TilmanGriesel/AlpineZen/actions/workflows/docs-deploy.yml"><img src="https://img.shields.io/github/actions/workflow/status/TilmanGriesel/AlpineZen/.github%2Fworkflows%2Fdocs-deploy.yml?colorA=F24F32&colorB=F0E6E0&style=for-the-badge&label=GitHub Pages"></a>
+</p>
 
 ---
 
