@@ -14,6 +14,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
+replace github.com/reujab/wallpaper v0.0.0-20210630195606-5f9f655b3740 => github.com/bascht/wallpaper v0.0.0-20250302233856-99807d94bceb
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
