@@ -23,7 +23,7 @@
 
 ### Prerequisites
 
-- Go 1.22.3 or later
+- Go 1.24.0 or later
 - Make (for building from source)
 
 ### Building from Source
