@@ -6,6 +6,13 @@ name: Build Job
 
 on:
   workflow_call:
+  pull_request:
+    branches:
+      - "main"
+
+  push:
+    branches:
+      - "main"
 
 jobs:
   build:
