@@ -1,5 +1,5 @@
 # Builder stage
-FROM golang:1.22.3-alpine as builder
+FROM golang:1.24.0-alpine as builder
 
 ARG VERSION=latest
 ENV APP_VERSION=$VERSION
