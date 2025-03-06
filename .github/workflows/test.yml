@@ -21,7 +21,7 @@ jobs:
         arch: [amd64]
 
     env:
-      GO_VERSION: "1.22.5"
+      GO_VERSION: "1.24.0"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
