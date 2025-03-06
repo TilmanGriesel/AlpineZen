@@ -1,3 +1,5 @@
+github.com/bascht/wallpaper v0.0.0-20250302233856-99807d94bceb h1:Ic+SU8gh+3wiAYQM4i05S1qW8L4MxIF34OUUEkQX0zU=
+github.com/bascht/wallpaper v0.0.0-20250302233856-99807d94bceb/go.mod h1:WYwPVmM/8szeItLeWkwZSLRvQgrvsvstRzgznR8+E4Q=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -27,8 +29,6 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/progrium/darwinkit v0.5.0 h1:SwchcMbTOG1py3CQsINmGlsRmYKdlFrbnv3dE4aXA0s=
 github.com/progrium/darwinkit v0.5.0/go.mod h1:PxQhZuftnALLkCVaR8LaHtUOfoo4pm8qUDG+3C/sXNs=
-github.com/reujab/wallpaper v0.0.0-20210630195606-5f9f655b3740 h1:X6IDPPN+zrSClp0Q+JiERA//d8L0WcU5MqcGeulCW1A=
-github.com/reujab/wallpaper v0.0.0-20210630195606-5f9f655b3740/go.mod h1:WYwPVmM/8szeItLeWkwZSLRvQgrvsvstRzgznR8+E4Q=
 github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
 github.com/rogpeppe/go-internal v1.11.0 h1:cWPaGQEPrBb5/AsnsZesgZZ9yb1OQ+GOISoDNXVBh4M=
 github.com/rogpeppe/go-internal v1.11.0/go.mod h1:ddIwULY96R17DhadqLgMfk9H9tvdUzkipdSkR5nkCZA=
