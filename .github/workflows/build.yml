@@ -100,8 +100,36 @@ jobs:
           # Compress tar file
           gzip alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.tar
 
+      - name: Create Linux deb
+        uses: burningalchemist/action-gh-nfpm@v1
+        if: matrix.os == 'linux'
+        with:
+          packager: deb
+          config: assets/linux/nfpm.yaml
+          target: dist/alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.deb
+
+      - name: Create Linux rpm
+        uses: burningalchemist/action-gh-nfpm@v1
+        if: matrix.os == 'linux'
+        with:
+          packager: rpm
+          config: assets/linux/nfpm.yaml
+          target: dist/alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.rpm
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
           path: dist/alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+
+      - name: Upload rpm
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.rpm
+          path: dist/alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.rpm
+
+      - name: Upload deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.deb
+          path: dist/alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.deb
