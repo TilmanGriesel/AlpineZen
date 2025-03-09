@@ -7,9 +7,9 @@
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
 
 name: "alpinezen-wallpaper"
-arch: "{{ .Arch }}"
+arch: "amd64"
 platform: "linux"
-version: "{{ .Version }}"
+version: "1.0.0"
 #section: "default"
 #priority: "extra"
 suggests:
@@ -21,9 +21,9 @@ vendor: "Tilmann Griesel"
 homepage: "https://alpinezen.club"
 license: "GPL"
 contents:
-  - src: ./alpinezen-wallpaper-linux-{{ .Arch }}/alpinezen-wallpaper-cli-linux-{{ .Arch }}
+  - src: ./dist/linux-amd64/alpinezen-wallpaper-cli-linux-amd64
     dst: /usr/bin/alpinezen-wallpaper-cli
-  - src: ./alpinezen-wallpaper-linux-{{ .Arch }}/alpinezen-wallpaper-ui-linux-{{ .Arch }}
+  - src: ./dist/linux-amd64/alpinezen-wallpaper-ui-linux-amd64
     dst: /usr/bin/alpinezen-wallpaper-ui
   - src: ./assets/linux/alpinezen.service
     dst: /usr/lib/systemd/user/alpinezen.service
