@@ -6,10 +6,10 @@
 # yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
 
-name: "alpinezen"
-arch: "amd64"
+name: "alpinezen-wallpaper"
+arch: "{{ .Arch }}"
 platform: "linux"
-version: "1.0.0"
+version: "{{ .Version }}"
 #section: "default"
 #priority: "extra"
 suggests:
@@ -21,8 +21,10 @@ vendor: "Tilmann Griesel"
 homepage: "https://alpinezen.club"
 license: "GPL"
 contents:
-  - src: ./dist/linux-amd64/alpinzen-wallpaper-linux-amd64
-    dst: /usr/bin/alpinezen
+  - src: ./alpinezen-wallpaper-linux-{{ .Arch }}/alpinezen-wallpaper-cli-linux-{{ .Arch }}
+    dst: /usr/bin/alpinezen-wallpaper-cli
+  - src: ./alpinezen-wallpaper-linux-{{ .Arch }}/alpinezen-wallpaper-ui-linux-{{ .Arch }}
+    dst: /usr/bin/alpinezen-wallpaper-ui
   - src: ./assets/linux/alpinezen.service
     dst: /usr/lib/systemd/user/alpinezen.service
 # overrides:
