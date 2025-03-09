@@ -13,6 +13,11 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux]
+        arch: [arm64, amd64]
+      fail-fast: false
 
     steps:
       - name: Checkout repository
@@ -45,6 +50,24 @@ jobs:
         with:
           path: .
 
+      - name: Create Linux deb
+        uses: burningalchemist/action-gh-nfpm@v1
+        if: matrix.os == 'linux'
+        with:
+          packager: deb
+          config: assets/linux/nfpm.yaml
+          target: alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.deb
+          version: ${{ env.VERSION }}
+
+      - name: Create Linux rpm
+        uses: burningalchemist/action-gh-nfpm@v1
+        if: matrix.os == 'linux'
+        with:
+          packager: rpm
+          config: assets/linux/nfpm.yaml
+          target: alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.rpm
+          version: ${{ env.VERSION }}
+
       - name: Rename artifacts with version and build number
         run: |
           find . -type f \( -name "*.tar.gz" -o -name "*.dmg" \) | while read file; do
@@ -68,4 +91,4 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.token }}
-          artifacts: "**/*.tar.gz,**/*.dmg"
+          artifacts: "**/*.tar.gz,**/*.dmg,**/*.deb,**/*.rpm"
