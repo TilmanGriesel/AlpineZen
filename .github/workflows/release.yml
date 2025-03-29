@@ -74,3 +74,6 @@ jobs:
         with:
           token: ${{ secrets.token }}
           artifacts: "**/*.tar.gz,**/*.dmg,**/*.deb,**/*.rpm"
+          allowUpdates: true
+          updateOnlyUnreleased: false
+          draft: false
