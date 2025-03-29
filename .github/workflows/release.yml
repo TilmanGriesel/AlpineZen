@@ -52,14 +52,14 @@ jobs:
 
       - name: Rename artifacts with version and build number
         run: |
-          find . -type f \( -name "*.tar.gz" -o -name "*.dmg" \) | while read file; do
+          find . -type f \( -name "*.tar.gz" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" \) | while read file; do
             dir=$(dirname "$file")
             base=$(basename "$file")
 
             if [[ "$base" =~ \.tar\.gz$ ]]; then
               name="${base%.tar.gz}"
               new_name="${name}-${VERSION}.tar.gz"
-            else
+            elif [[ "$base" =~ \.(dmg|deb|rpm)$ ]]; then
               name="${base%.*}"
               ext="${base##*.}"
               new_name="${name}-${VERSION}.${ext}"

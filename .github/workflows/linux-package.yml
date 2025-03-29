@@ -1,0 +1,188 @@
+# SPDX-FileCopyrightText: 2025 Tilman Griesel
+#
+# SPDX-License-Identifier: GPL-3.0-or-later AND LicenseRef-AlpineZen-Trademark
+
+name: Linux Package Job
+
+on:
+  workflow_call:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+        format: [deb, rpm]
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set default version
+        run: echo "VERSION=dev" >> $GITHUB_ENV
+
+      - name: Get version from tag
+        if: startsWith(github.ref, 'refs/tags/')
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Get build number
+        id: get_build_number
+        run: echo "BUILD_NUMBER=${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
+      
+      - name: Define package mapping for architectures
+        run: |
+          if [ "${{ matrix.arch }}" == "amd64" ]; then
+            echo "PKG_ARCH=x86_64" >> $GITHUB_ENV
+          elif [ "${{ matrix.arch }}" == "arm64" ]; then
+            echo "PKG_ARCH=aarch64" >> $GITHUB_ENV
+          fi
+
+      - name: Create service file
+        run: |
+          mkdir -p build/systemd
+          
+          cat > build/systemd/alpinezen.service << EOF
+          [Unit]
+          Description=Breathe life into your workspace with dynamic wallpapers
+          After=network.target graphical-session.target
+          
+          [Service]
+          Type=simple
+          ExecStart=/usr/bin/alpinezen-wallpaper
+          Restart=always
+          RestartSec=10s
+          StartLimitInterval=5
+          StartLimitBurst=10
+          # Environment setup for running with user session
+          Environment=DISPLAY=:0
+          
+          [Install]
+          WantedBy=graphical-session.target
+          EOF
+      
+      - name: Create package spec file
+        run: |
+          cat > package.yaml << EOF
+          meta:
+            description: AlpineZen Wallpaper - Dynamic Wallpaper Application
+            vendor: AlpineZen
+            maintainer: Tilman Griesel
+            license: GPL-3.0-or-later
+          
+          files:
+            "/usr/bin/alpinezen-wallpaper":
+              file: alpinezen-wallpaper-cli-linux-${{ matrix.arch }}
+              mode: "0755"
+              user: "root"
+            "/usr/lib/systemd/user/alpinezen.service":
+              file: build/systemd/alpinezen.service
+              mode: "0644"
+              user: "root"
+            "/usr/share/icons/hicolor/512x512/apps/alpinezen.png":
+              file: assets/macos/AppIcon/AppIconSunrise.iconset/icon_512x512.png
+              mode: "0644"
+              user: "root"
+          
+          scripts:
+            "post-install": scripts/post-install.sh
+            "pre-remove": scripts/pre-remove.sh
+          EOF
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: alpinezen-wallpaper-linux-${{ matrix.arch }}.tar.gz
+          path: .
+
+      - name: Extract artifact
+        run: tar -xzvf alpinezen-wallpaper-linux-${{ matrix.arch }}.tar.gz
+        
+      - name: Rename CLI binary
+        run: |
+          if [ -f "alpinezen-wallpaper-cli-linux-${{ matrix.arch }}" ]; then
+            echo "CLI binary found"
+          else
+            echo "Error: CLI binary not found!"
+            find . -name "alpinezen-wallpaper-cli*" || echo "No CLI binaries found"
+            exit 1
+          fi
+
+      - name: Create scripts directory and files
+        run: |
+          mkdir -p scripts
+          
+          # Create post-install script
+          cat > scripts/post-install.sh << EOF
+          #!/bin/sh
+          # Create desktop file for the application menu
+          mkdir -p /usr/share/applications/
+          
+          cat > /usr/share/applications/alpinezen.desktop << DESKTOP
+          [Desktop Entry]
+          Name=AlpineZen Wallpaper
+          Comment=Dynamic wallpaper application
+          Exec=/usr/bin/alpinezen-wallpaper
+          Icon=alpinezen
+          Terminal=false
+          Type=Application
+          Categories=Utility;Graphics;
+          Keywords=wallpaper;background;
+          DESKTOP
+          
+          # Update desktop database and icon cache
+          if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database -q
+          fi
+          
+          if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+            gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+          fi
+          
+          # Output installation success message with usage instructions
+          echo "AlpineZen Wallpaper has been installed successfully."
+          echo ""
+          echo "You can start it by:"
+          echo "1. Running 'alpinezen-wallpaper' in a terminal"
+          echo "2. Using the application menu entry"
+          echo "3. Setting up as a user service with: 'systemctl --user enable --now alpinezen'"
+          echo ""
+          EOF
+          
+          # Create pre-remove script
+          cat > scripts/pre-remove.sh << EOF
+          #!/bin/sh
+          # Stop user service if running
+          systemctl --user stop alpinezen.service 2>/dev/null || true
+          systemctl --user disable alpinezen.service 2>/dev/null || true
+          
+          # Remove desktop file
+          rm -f /usr/share/applications/alpinezen.desktop
+          
+          # Update desktop database
+          if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database -q
+          fi
+          
+          echo "AlpineZen Wallpaper has been removed."
+          EOF
+          
+          # Make scripts executable
+          chmod +x scripts/post-install.sh scripts/pre-remove.sh
+
+      - name: Build Linux package
+        uses: kentik/pkg@v1
+        with:
+          name: alpinezen-wallpaper
+          version: ${{ env.VERSION }}
+          arch: ${{ env.PKG_ARCH }}
+          format: ${{ matrix.format }}
+          package: package.yaml
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpinezen-wallpaper-${{ env.VERSION }}-linux-${{ matrix.arch }}.${{ matrix.format }}
+          path: alpinezen-wallpaper*.${{ matrix.format }}
