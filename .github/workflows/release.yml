@@ -50,35 +50,6 @@ jobs:
         with:
           path: .
 
-      - name: Prepare environment for nfpm
-        run: |
-          mkdir -p ./dist
-          for arch in arm64 amd64; do
-            if [ -d "./alpinezen-wallpaper-linux-$arch" ]; then
-              # Extract the tar.gz into the directory for nfpm to access
-              mkdir -p ./dist/linux-$arch
-              tar -xzf ./alpinezen-wallpaper-linux-$arch.tar.gz/alpinezen-wallpaper-linux-$arch.tar.gz -C ./dist/linux-$arch
-            fi
-          done
-          # Replace version in nfpm.yaml
-          sed -i "s/version: \".*\"/version: \"${{ env.VERSION }}\"/" assets/linux/nfpm.yaml
-
-      - name: Create Linux deb
-        uses: burningalchemist/action-gh-nfpm@v1
-        if: matrix.os == 'linux'
-        with:
-          packager: deb
-          config: assets/linux/nfpm.yaml
-          target: alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.deb
-
-      - name: Create Linux rpm
-        uses: burningalchemist/action-gh-nfpm@v1
-        if: matrix.os == 'linux'
-        with:
-          packager: rpm
-          config: assets/linux/nfpm.yaml
-          target: alpinezen-wallpaper-${{ matrix.os }}-${{ matrix.arch }}.rpm
-
       - name: Rename artifacts with version and build number
         run: |
           find . -type f \( -name "*.tar.gz" -o -name "*.dmg" \) | while read file; do
