@@ -37,9 +37,13 @@ jobs:
       apple_codesign_password: ${{ secrets.APPLE_CODESIGN_PASSWORD }}
       apple_notary_user: ${{ secrets.APPLE_DEVELOPER_ID }}
       apple_notary_password: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+  
+  linux-package:
+    needs: [build]
+    uses: ./.github/workflows/linux-package.yml
 
   release:
-    needs: [build, macos-package]
+    needs: [build, macos-package, linux-package]
     uses: ./.github/workflows/release.yml
     secrets:
       token: ${{ secrets.PAT }}
