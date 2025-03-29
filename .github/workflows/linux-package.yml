@@ -172,17 +172,77 @@ jobs:
           # Make scripts executable
           chmod +x scripts/post-install.sh scripts/pre-remove.sh
 
-      - name: Build Linux package
-        uses: kentik/pkg@v1
-        with:
+      - name: Install NFPM
+        run: |
+          curl -sfL https://github.com/goreleaser/nfpm/releases/download/v2.32.0/nfpm_2.32.0_Linux_x86_64.tar.gz | tar xz
+          chmod +x nfpm
+          sudo mv nfpm /usr/local/bin/
+          nfpm --version
+
+      - name: Update NFPM config for compatibility
+        run: |
+          # Convert package.yaml to nfpm.yaml format
+          cat > nfpm.yaml << EOF
           name: alpinezen-wallpaper
           version: ${{ env.VERSION }}
           arch: ${{ env.PKG_ARCH }}
-          format: ${{ matrix.format }}
-          package: package.yaml
+          description: Breathe life into your workspace with dynamic wallpapers
+          vendor: AlpineZen
+          maintainer: Tilman Griesel
+          license: GPL-3.0-or-later
+          
+          contents:
+            - src: alpinezen-wallpaper-cli-linux-${{ matrix.arch }}
+              dst: /usr/bin/alpinezen-wallpaper
+              file_info:
+                mode: 0755
+                owner: root
+                group: root
+            - src: build/systemd/alpinezen.service
+              dst: /usr/lib/systemd/user/alpinezen.service
+              file_info:
+                mode: 0644
+                owner: root
+                group: root
+            - src: assets/macos/AppIcon/AppIconSunrise.iconset/icon_512x512.png
+              dst: /usr/share/icons/hicolor/512x512/apps/alpinezen.png
+              file_info:
+                mode: 0644
+                owner: root
+                group: root
+          
+          scripts:
+            postinstall: scripts/post-install.sh
+            preremove: scripts/pre-remove.sh
+          EOF
+
+      - name: Build Linux package
+        run: |
+          nfpm package \
+            --config nfpm.yaml \
+            --packager ${{ matrix.format }} \
+            --target ./
+
+      - name: Rename package artifact for consistency
+        run: |
+          if [ -f "alpinezen-wallpaper_${{ env.VERSION }}_${{ env.PKG_ARCH }}.${{ matrix.format }}" ]; then
+            mv "alpinezen-wallpaper_${{ env.VERSION }}_${{ env.PKG_ARCH }}.${{ matrix.format }}" \
+               "alpinezen-wallpaper-${{ env.VERSION }}-linux-${{ matrix.arch }}.${{ matrix.format }}"
+          else
+            echo "Looking for the generated package..."
+            find . -name "*.deb" -o -name "*.rpm"
+            # If we can't find the expected filename pattern, try to find any package file
+            PKG_FILE=$(find . -name "alpinezen-wallpaper*.${{ matrix.format }}" | head -1)
+            if [ -n "$PKG_FILE" ]; then
+              mv "$PKG_FILE" "alpinezen-wallpaper-${{ env.VERSION }}-linux-${{ matrix.arch }}.${{ matrix.format }}"
+            else
+              echo "Error: Could not find generated package file"
+              exit 1
+            fi
+          fi
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
           name: alpinezen-wallpaper-${{ env.VERSION }}-linux-${{ matrix.arch }}.${{ matrix.format }}
-          path: alpinezen-wallpaper*.${{ matrix.format }}
+          path: alpinezen-wallpaper-${{ env.VERSION }}-linux-${{ matrix.arch }}.${{ matrix.format }}
