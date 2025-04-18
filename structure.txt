@@ -1,0 +1,203 @@
+.
+├── assets
+│   ├── brand
+│   │   ├── alpinezen_logo_black.svg
+│   │   ├── alpinezen_logo_black.svg.license
+│   │   ├── alpinezen_logo_color.svg
+│   │   ├── alpinezen_logo_color.svg.license
+│   │   ├── alpinezen_logo_small.svg
+│   │   ├── alpinezen_logo_small.svg.license
+│   │   ├── alpinezen_logo_white.svg
+│   │   ├── alpinezen_logo_white.svg.license
+│   │   └── banner
+│   │       ├── banner.svg
+│   │       ├── banner.svg.license
+│   │       ├── banner_variant.svg
+│   │       └── banner_variant.svg.license
+│   └── macos
+│       ├── AppIcon
+│       │   ├── AppIconSunrise.iconset
+│       │   │   ├── Contents.json
+│       │   │   ├── icon_128x128.png
+│       │   │   ├── icon_128x128.png.license
+│       │   │   ├── icon_128x128@2x@2x.png
+│       │   │   ├── icon_128x128@2x@2x.png.license
+│       │   │   ├── icon_16x16.png
+│       │   │   ├── icon_16x16.png.license
+│       │   │   ├── icon_16x16@2x@2x.png
+│       │   │   ├── icon_16x16@2x@2x.png.license
+│       │   │   ├── icon_256x256.png
+│       │   │   ├── icon_256x256.png.license
+│       │   │   ├── icon_256x256@2x@2x.png
+│       │   │   ├── icon_256x256@2x@2x.png.license
+│       │   │   ├── icon_32x32.png
+│       │   │   ├── icon_32x32.png.license
+│       │   │   ├── icon_32x32@2x@2x.png
+│       │   │   ├── icon_32x32@2x@2x.png.license
+│       │   │   ├── icon_512x512.png
+│       │   │   ├── icon_512x512.png.license
+│       │   │   ├── icon_512x512@2x@2x.png
+│       │   │   └── icon_512x512@2x@2x.png.license
+│       │   └── AppIconSunset.iconset
+│       │       ├── Contents.json
+│       │       ├── icon_128x128.png
+│       │       ├── icon_128x128.png.license
+│       │       ├── icon_128x128@2x@2x.png
+│       │       ├── icon_128x128@2x@2x.png.license
+│       │       ├── icon_16x16.png
+│       │       ├── icon_16x16.png.license
+│       │       ├── icon_16x16@2x@2x.png
+│       │       ├── icon_16x16@2x@2x.png.license
+│       │       ├── icon_256x256.png
+│       │       ├── icon_256x256.png.license
+│       │       ├── icon_256x256@2x@2x.png
+│       │       ├── icon_256x256@2x@2x.png.license
+│       │       ├── icon_32x32.png
+│       │       ├── icon_32x32.png.license
+│       │       ├── icon_32x32@2x@2x.png
+│       │       ├── icon_32x32@2x@2x.png.license
+│       │       ├── icon_512x512.png
+│       │       ├── icon_512x512.png.license
+│       │       ├── icon_512x512@2x@2x.png
+│       │       └── icon_512x512@2x@2x.png.license
+│       ├── Assets.xcassets
+│       │   ├── Contents.json
+│       │   └── MenuBarIcon.imageset
+│       │       ├── Contents.json
+│       │       ├── icon.png
+│       │       ├── icon.png.license
+│       │       ├── icon@2x.png
+│       │       ├── icon@2x.png.license
+│       │       ├── icon@3x.png
+│       │       └── icon@3x.png.license
+│       ├── cli_info.plist
+│       ├── dist
+│       │   ├── AlpineZenSunrise.icns
+│       │   ├── AlpineZenSunrise.icns.license
+│       │   ├── AlpineZenSunset.icns
+│       │   ├── AlpineZenSunset.icns.license
+│       │   └── Assets.car
+│       ├── entitlements.xml
+│       ├── scripts
+│       │   └── compile_assets.sh
+│       └── ui_info.plist
+├── build
+├── cmd
+│   ├── cli
+│   │   ├── darwin.go
+│   │   ├── main.go
+│   │   ├── main_test.go
+│   │   └── testdata
+│   │       └── config
+│   │           └── sample
+│   │               ├── default.yaml
+│   │               ├── watermark.png
+│   │               └── watermark.png.license
+│   └── ui
+│       ├── assets
+│       │   └── app.manifest
+│       ├── common.go
+│       ├── main_darwin.go
+│       ├── main_windows.go
+│       ├── platform_unix.go
+│       ├── platform_windows.go
+│       ├── rsrc.go
+│       └── rsrc.syso
+├── dist
+│   └── windows-amd64
+│       ├── AlpineZenHelper.exe
+│       ├── alpinzen-wallpaper-ui.exe
+│       └── alpinzen-wallpaper-windows-amd64
+├── docker
+│   └── entrypoint.sh
+├── Dockerfile
+├── docs
+│   ├── features
+│   │   ├── config-management.md
+│   │   └── dynamic-wallpapers.md
+│   ├── index.md
+│   └── public
+│       └── assets
+│           ├── brand
+│           │   ├── alpinezen_banner_eggshell.svg
+│           │   ├── alpinezen_banner_eggshell.svg.license
+│           │   ├── alpinezen_banner_orangeyred.svg
+│           │   ├── alpinezen_banner_orangeyred.svg.license
+│           │   ├── alpinezen_logo_black.svg
+│           │   ├── alpinezen_logo_black.svg.license
+│           │   ├── alpinezen_logo_full.svg
+│           │   ├── alpinezen_logo_full.svg.license
+│           │   ├── alpinezen_logo_sun.svg
+│           │   ├── alpinezen_logo_sun.svg.license
+│           │   ├── alpinezen_logo_white.svg
+│           │   └── alpinezen_logo_white.svg.license
+│           └── fonts
+│               └── Goudy_Bookletter_1911
+│                   ├── GoudyBookletter1911-Regular.ttf
+│                   └── GoudyBookletter1911-Regular.ttf.license
+├── go.mod
+├── go.sum
+├── LICENSE
+├── LICENSES
+│   ├── GPL-3.0-or-later.txt
+│   ├── LicenseRef-AlpineZen-Trademark.txt
+│   └── OFL-1.1.txt
+├── Makefile
+├── package.json
+├── pkg
+│   ├── logging
+│   │   └── logging.go
+│   ├── postprocess
+│   │   ├── adjustment
+│   │   │   ├── helpers.go
+│   │   │   ├── helpers_test.go
+│   │   │   ├── image_processor.go
+│   │   │   └── image_processor_test.go
+│   │   ├── assets
+│   │   │   ├── pregen_rand
+│   │   │   └── README.md
+│   │   ├── helpers.go
+│   │   ├── helpers_test.go
+│   │   ├── random.go
+│   │   └── render
+│   │       ├── assets
+│   │       │   └── fonts
+│   │       │       └── Lora
+│   │       │           ├── Lora-Bold.ttf
+│   │       │           ├── Lora-Bold.ttf.license
+│   │       │           ├── Lora-Italic.ttf
+│   │       │           ├── Lora-Italic.ttf.license
+│   │       │           ├── Lora-Regular.ttf
+│   │       │           ├── Lora-Regular.ttf.license
+│   │       │           └── README.txt
+│   │       └── typography_renderer.go
+│   ├── repository
+│   │   ├── janitor.go
+│   │   ├── repository_manager.go
+│   │   └── retry.go
+│   ├── sanitizer
+│   │   └── sanitizer.go
+│   ├── updater
+│   │   ├── update_manager.go
+│   │   └── update_manager_test.go
+│   ├── util
+│   │   ├── helpers.go
+│   │   ├── helpers_test.go
+│   │   └── testdata
+│   │       ├── sample.jpg
+│   │       └── sample.txt
+│   └── wallpaper
+│       ├── wallpaper.go
+│       ├── wallpaper_darwin.go
+│       └── wallpaper_manager.go
+├── README.md
+├── structure.txt
+├── tool
+│   ├── add_license_headers.py
+│   ├── generate_windows_resources.sh
+│   ├── rc_repo_cleanup.sh
+│   └── record_cli_demo.sh
+├── TRADEMARK
+└── yarn.lock
+
+47 directories, 154 files

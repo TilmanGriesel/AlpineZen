@@ -40,10 +40,11 @@ func main() {
 	runtime.LockOSThread()
 
 	// Load and store settings
-	appSettings, err = loadSettings()
+	settings, err := loadSettings()
 	if err != nil {
 		fmt.Println("Error loading settings:", err)
 	}
+	appSettings = settings
 
 	app := appkit.Application_SharedApplication()
 	delegate := &appkit.ApplicationDelegate{}
